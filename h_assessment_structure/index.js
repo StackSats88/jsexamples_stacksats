@@ -14,12 +14,41 @@ const RIGHT = "d";
 const QUIT = "q";
 
 // DONE: MSG_UP / MSG_DOWN / MSG_LEFT / MSG_RIGHT / MSG_ QUIT / MSG_INVALID / MSG_WELCOME message constants
-const MSG_UP = "You move up.";
-const MSG_DOWN = "You move down.";
-const MSG_LEFT = "You move left.";
-const MSG_RIGHT = "You move right.";
-const MSG_QUIT = "You quit the game.";
-const MSG_INVALID = "Invalid entry.";
+const MSG_UP = `
+===============
+You move up. ⬆️
+===============
+\n`;
+
+const MSG_DOWN = `
+=================
+You move down. ⬇️
+=================
+\n`;
+
+const MSG_LEFT = `
+=================
+You move left. ⬅️
+=================
+\n`;
+
+const MSG_RIGHT = `
+==================
+You move right. ➡️
+==================
+\n`;
+
+const MSG_QUIT = `
+~~~~~~~~~~~~~~~~~~~~~
+You quit the game. 🚫
+~~~~~~~~~~~~~~~~~~~~~
+\n`;
+
+const MSG_INVALID = `
+#################
+Invalid entry. ⛔️
+#################
+\n`;
 
 // I use backticks (`) here to create a multi-line string template
 const MSG_WELCOME = `
@@ -37,13 +66,26 @@ Controls:
 - Use '${RIGHT}' to move right
 - Use '${QUIT}' to exit the game
 \n`;
+
 // -----------------------
 
 // DONE: WIN / LOSE / OUT messages constants
-const WIN = "Congratulations, you won.";
-const LOSE = "Too bad, you lost.";
-const OUT = "You went out-of-bounds, you lost."
+const WIN = `
+**************************** Congratulations, You Won. 🎉
+****************************
+\n`;
 
+const LOSE = `
+------------------------------------
+You fell down the hole, you lose. 😔
+------------------------------------
+\n`;
+
+const OUT = `
+<><><><><><><><><><><><><><><><><><>
+You went out-of-bounds, you lose. 😩
+<><><><><><><><><><><><><><><><><><>
+\n`;
 
 // DONE: MAP ROWS, COLUMNS AND PERCENTAGE
 const ROWS = 10;
@@ -70,7 +112,6 @@ class Field {
    * @returns {Array}                - 2d array to be used by the instance of the game
    */
   static generateField(rows = 8, cols = 8, percent = 0.1) {
-
     const map = new Array();
 
     // generate fields by rows and cols passed in
@@ -81,7 +122,6 @@ class Field {
         map[row][col] = Math.random() > percent ? GRASS : HOLE;            // use Math.random() to randomise the holes in the map
       }
     }
-
     return map;
   }
 
@@ -95,9 +135,17 @@ class Field {
 
   // DONE: setHat positions the hat along a random x and y position within field array
   setHat() {
-    const xHat = Math.floor(Math.random() * ROWS - 1) + 1; // (0 to 3) + 1, therefore, my min x = 1
-    const yHat = Math.floor(Math.random() * COLS - 1) + 1; // (0 to 3) + 1, therefore, my min y = 1
-    this.field[xHat][yHat] = HAT;
+    let xHat = 0;
+    let yHat = 0;
+
+    // Use a loop to make sure Hat does not spawn on the player start (0,0)
+    do {
+      xHat = Math.floor(Math.random() * COLS);
+      yHat = Math.floor(Math.random() * ROWS);
+    } while (xHat === 0 && yHat === 0);
+    
+    // Set the Hat (Remember: field is [row][col], so it is [y][x])
+    this.field[yHat][xHat] = HAT;
   }
 
   // DONE: printField displays the updated status of the field position
@@ -182,52 +230,76 @@ class Field {
     this.field[0][0] = PLAYER;             // positioning the player on the field, based on player's default position
     this.setHat();                         // the postion of the Hat
 
+    // Variable to track the input from the PREVIOUS turn
+    let input = "";
+
     // while gamePlay === true, track player moves and updates
     do {
+      // 1. Clear the screen (wipes old history)
+      console.clear();
 
-      this.printField();                   // print the formatted field
-      const input = prompt("(w)up, (s)down, (a)left, (d)right, (q)exit: ");
+      // 2. Print the map
+      this.printField();                   
 
-      switch (input.toLowerCase()) {
+      // 3. Print the message regarding the PREVIOUS move
+      // We do this after clearing so the message stays visible
+      if (input) {
+        this.updateMove(input);
+      } else {
+        console.log(""); // Print a blank line for spacing on first turn
+      }
+
+      // 4. Print the separator line
+      console.log('-------------------------------------------\n');
+
+      // 5. Get NEW input
+      const rawInput = prompt("(w)up, (s)down, (a)left, (d)right, (q)exit: ");
+
+      // Check if user pressed cancel/Ctrl+C
+      if (rawInput == null) break;
+
+      // Update input variable for next loop
+      input = rawInput.toLowerCase();
+
+      switch (input) {
         case UP:
-          this.updateMove(UP);
-          this.updateGame(UP);             // Added: Actually perform the logic
+          this.updateGame(UP);
           break;
         case DOWN:
-          this.updateMove(DOWN);
-          this.updateGame(DOWN);           // Added: Actually perform the logic
+          this.updateGame(DOWN);
           break;
         case LEFT:
-          this.updateMove(LEFT);
-          this.updateGame(LEFT);           // Added: Actually perform the logic
+          this.updateGame(LEFT);
           break;
         case RIGHT:
-          this.updateMove(RIGHT);
-          this.updateGame(RIGHT);          // Added: Actually perform the logic
+          this.updateGame(RIGHT);
           break;
         case QUIT:
-          this.updateMove(QUIT);
-          this.gamePlay = false;           // Added: Ensures loop stops on quit
+          this.gamePlay = false;           // Ensures loop stops on quit
           break;
         default:
-          this.updateMove();               // represents invalid entry
+          // We don't do anything here. The updateMove at the top 
+          // of the next loop will handle the "Invalid Entry" message
           break;
       }
 
     } while (this.gamePlay);
+
+    // Special handling for Quit message since loop breaks instantly
+    if (input === QUIT) {
+      this.updateMove(QUIT);
+    }
   }
 }
-
 
 // DONE: Generate a new field - using Field's static method: generateField
 const gameField = Field.generateField(ROWS, COLS, PERCENT);
 
-// DONE: Generate aa welcome message
+// DONE: Generate a welcome message
 Field.welcomeMessage(MSG_WELCOME);
 
 // DONE: Create a new instance of the game
 const game = new Field(gameField);
-
 
 // DONE: Invoke method start(...) from the instance of game object
 game.start();
