@@ -71,7 +71,8 @@ Controls:
 
 // DONE: WIN / LOSE / OUT messages constants
 const WIN = `
-**************************** Congratulations, You Won. 🎉
+**************************** 
+Congratulations, You Won. 🎉
 ****************************
 \n`;
 
