@@ -1,10 +1,10 @@
 const prompt = require("prompt-sync")({ sigint: true });
 
 // DONE: Game elements/assets constants
-const GRASS = '░';
-const HOLE = 'O';
-const HAT = '^';
-const PLAYER = '*';
+const GRASS = '🌱';
+const HOLE = '🕳️';
+const HAT = '🧢';
+const PLAYER = '👺';
 
 // DONE: UP / DOWN / LEFT / RIGHT / QUIT keyboard constants
 const UP = "w";
